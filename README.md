@@ -27,6 +27,7 @@ This tapestry documents the "Metall auf Metall" series of court decisions (Kraft
 - Minimap showing current position
 - Keyboard navigation (arrows, space, home/end, +/-/0, P)
 - Click panels or hover for detailed scene explanations (German/English)
+- Toggle background music on/off
 - AVIF and WebP formats for optimal web performance
 
 ## Credits

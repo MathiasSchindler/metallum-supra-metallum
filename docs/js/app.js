@@ -272,3 +272,42 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+// Background music toggle
+function initMusic() {
+    const btnMusic = document.getElementById('btnMusic');
+    const bgMusic = document.getElementById('bgMusic');
+    if (!btnMusic || !bgMusic) return;
+    
+    bgMusic.volume = 0.3;
+    let isPlaying = false;
+    
+    btnMusic.addEventListener('click', () => {
+        if (isPlaying) {
+            bgMusic.pause();
+            isPlaying = false;
+            btnMusic.textContent = '🔇 Musik';
+            btnMusic.title = 'Hintergrundmusik einschalten';
+        } else {
+            bgMusic.play().catch(() => {
+                // Autoplay might be blocked, but user interaction should allow it
+            });
+            isPlaying = true;
+            btnMusic.textContent = '🔊 Musik';
+            btnMusic.title = 'Hintergrundmusik ausschalten';
+        }
+    });
+}
+
+// Call initMusic after other inits
+const originalInit = init;
+if (typeof init === 'function') {
+    // We need to extend - but easier to just add after
+}
+
+// Initialize music
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMusic);
+} else {
+    initMusic();
+}
