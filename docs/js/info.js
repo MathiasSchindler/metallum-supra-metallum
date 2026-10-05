@@ -1,33 +1,8 @@
-let sceneData = {};
 let pinnedPanel = null;
 
-async function loadSceneData() {
-    try {
-        const response = await fetch('scene_data.json');
-        if (response.ok) {
-            sceneData = await response.json();
-        } else {
-            // Fallback: try to parse from script tag
-            const dataElement = document.getElementById('sceneData');
-            if (dataElement && dataElement.textContent) {
-                sceneData = JSON.parse(dataElement.textContent);
-            }
-        }
-    } catch (e) {
-        console.error('Failed to load scene data', e);
-        const dataElement = document.getElementById('sceneData');
-        if (dataElement && dataElement.textContent) {
-            try {
-                sceneData = JSON.parse(dataElement.textContent);
-            } catch (e2) {
-                console.error('Also failed to parse from script tag', e2);
-            }
-        }
-    }
-}
-
 function formatSceneInfo(num) {
-    const data = sceneData[num];
+    // sceneData is loaded from scene_data.js
+    const data = (typeof sceneData !== 'undefined') ? sceneData[num] : null;
     if (!data) {
         return `<h2>Panel ${String(num).padStart(2, '0')}</h2><p>Keine Erklärung verfügbar.</p>`;
     }
@@ -69,9 +44,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-async function initInfoPanel() {
-    await loadSceneData();
-    
+function initInfoPanel() {
     const infoPanel = document.getElementById('infoPanel');
     const infoContent = document.getElementById('infoPanelContent');
     const closeBtn = document.getElementById('infoPanelClose');
@@ -92,9 +65,7 @@ async function initInfoPanel() {
         if (isNaN(num)) return;
         
         panel.addEventListener('mouseenter', () => {
-            if (pinnedPanel === null && infoContent && num in sceneData) {
-                infoContent.innerHTML = formatSceneInfo(num);
-            } else if (pinnedPanel === null && infoContent && !(num in sceneData)) {
+            if (pinnedPanel === null && infoContent) {
                 infoContent.innerHTML = formatSceneInfo(num);
             }
         });
