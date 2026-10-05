@@ -289,3 +289,137 @@ body {
     user-select: none;
     -webkit-user-select: none;
 }
+
+/* Info Panel */
+.info-panel {
+    position: fixed;
+    top: 90px;
+    right: -420px;
+    width: 400px;
+    max-height: calc(100vh - 180px);
+    background: var(--control-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.9);
+    z-index: 30;
+    transition: right 0.3s ease;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) rgba(15, 13, 9, 0.5);
+}
+
+.info-panel.pinned {
+    right: 12px;
+}
+
+.info-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.info-panel::-webkit-scrollbar-track {
+    background: rgba(15, 13, 9, 0.5);
+}
+
+.info-panel::-webkit-scrollbar-thumb {
+    background: linear-gradient(to bottom, #7d6748, var(--border-color));
+    border-radius: 3px;
+}
+
+.info-panel-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    font-size: 24px;
+    cursor: pointer;
+    width: 24px;
+    height: 24px;
+    line-height: 20px;
+    text-align: center;
+    padding: 0;
+    z-index: 31;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.info-panel-close:hover {
+    opacity: 1;
+}
+
+.info-panel-content {
+    padding: 24px 16px 16px;
+}
+
+.info-panel-content h2 {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 0.95rem;
+    margin-bottom: 12px;
+    color: #e7ded0;
+    line-height: 1.4;
+    padding-right: 20px;
+}
+
+.info-panel-content h3 {
+    font-family: 'Cinzel', Georgia, serif;
+    font-size: 0.8rem;
+    margin: 12px 0 6px;
+    color: #c9b9a0;
+}
+
+.info-meta {
+    font-size: 0.75rem;
+    margin: 4px 0;
+    color: #b8a082;
+    line-height: 1.5;
+}
+
+.info-section {
+    margin: 12px 0;
+    padding: 10px;
+    background: rgba(15, 13, 9, 0.5);
+    border-left: 2px solid var(--border-color);
+    border-radius: 2px;
+}
+
+.info-section p {
+    font-size: 0.75rem;
+    line-height: 1.6;
+    color: #d6c9b3;
+    text-align: justify;
+}
+
+.info-hint {
+    font-size: 0.7rem;
+    color: #8a7a62;
+    font-style: italic;
+    margin: 4px 0;
+}
+
+.info-link a {
+    color: #d6c9b3;
+    text-decoration: underline;
+    font-size: 0.75rem;
+}
+
+.info-link a:hover {
+    color: var(--text-color);
+}
+
+@media (max-width: 768px) {
+    .info-panel {
+        width: calc(100vw - 24px);
+        right: calc(-100vw + 12px);
+        top: 110px;
+        max-height: calc(100vh - 220px);
+    }
+    
+    .info-panel.pinned {
+        right: 12px;
+    }
+}
+
+.tapestry-panel {
+    cursor: pointer;
+}
