@@ -1,13 +1,27 @@
 let sceneData = {};
 let pinnedPanel = null;
 
-function loadSceneData() {
-    const dataElement = document.getElementById('sceneData');
-    if (dataElement) {
-        try {
-            sceneData = JSON.parse(dataElement.textContent);
-        } catch (e) {
-            console.error('Failed to parse scene data', e);
+async function loadSceneData() {
+    try {
+        const response = await fetch('scene_data.json');
+        if (response.ok) {
+            sceneData = await response.json();
+        } else {
+            // Fallback: try to parse from script tag
+            const dataElement = document.getElementById('sceneData');
+            if (dataElement && dataElement.textContent) {
+                sceneData = JSON.parse(dataElement.textContent);
+            }
+        }
+    } catch (e) {
+        console.error('Failed to load scene data', e);
+        const dataElement = document.getElementById('sceneData');
+        if (dataElement && dataElement.textContent) {
+            try {
+                sceneData = JSON.parse(dataElement.textContent);
+            } catch (e2) {
+                console.error('Also failed to parse from script tag', e2);
+            }
         }
     }
 }
@@ -55,8 +69,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-function initInfoPanel() {
-    loadSceneData();
+async function initInfoPanel() {
+    await loadSceneData();
     
     const infoPanel = document.getElementById('infoPanel');
     const infoContent = document.getElementById('infoPanelContent');
@@ -78,7 +92,9 @@ function initInfoPanel() {
         if (isNaN(num)) return;
         
         panel.addEventListener('mouseenter', () => {
-            if (pinnedPanel === null && infoContent) {
+            if (pinnedPanel === null && infoContent && num in sceneData) {
+                infoContent.innerHTML = formatSceneInfo(num);
+            } else if (pinnedPanel === null && infoContent && !(num in sceneData)) {
                 infoContent.innerHTML = formatSceneInfo(num);
             }
         });
