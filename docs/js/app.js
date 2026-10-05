@@ -273,3 +273,32 @@ if (document.readyState === 'loading') {
 } else {
     init();
 }
+
+function initMusic() {
+    const btnMusic = document.getElementById('btnMusic');
+    const bgMusic = document.getElementById('bgMusic');
+    if (!btnMusic || !bgMusic) return;
+    
+    bgMusic.volume = 0.3;
+    let isPlaying = false;
+    
+    btnMusic.addEventListener('click', () => {
+        if (isPlaying) {
+            bgMusic.pause();
+            isPlaying = false;
+            btnMusic.textContent = '🔇 Musik';
+            btnMusic.title = 'Hintergrundmusik einschalten';
+        } else {
+            bgMusic.play().catch(() => {});
+            isPlaying = true;
+            btnMusic.textContent = '🔊 Musik';
+            btnMusic.title = 'Hintergrundmusik ausschalten';
+        }
+    });
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initMusic);
+} else {
+    initMusic();
+}
