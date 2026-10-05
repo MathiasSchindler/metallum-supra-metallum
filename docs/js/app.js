@@ -11,7 +11,14 @@ const scrollSpeed = 2;
 const zoomStep = 0.05;
 const minZoom = 0.25;
 const maxZoom = 4.0;
-const friction = 0.95; // deceleration factor
+const friction = 0.95;
+
+function getScaledScrollWidth() {
+    const viewport = document.getElementById('tapestryViewport');
+    const strip = document.getElementById('tapestryStrip');
+    if (!viewport || !strip) return viewport ? viewport.scrollWidth : 0;
+    return strip.scrollWidth * currentZoom;
+}
 
 function init() {
     const viewport = document.getElementById('tapestryViewport');
@@ -20,19 +27,15 @@ function init() {
     buildMinimap();
     
     if (viewport) {
-        // Drag to pan with inertia
         viewport.addEventListener('mousedown', (e) => {
             isDragging = true;
             viewport.style.cursor = 'grabbing';
             viewport.style.userSelect = 'none';
             document.body.style.userSelect = 'none';
-            
-            // Stop momentum if active
             if (momentumID) {
                 cancelAnimationFrame(momentumID);
                 momentumID = null;
             }
-            
             startX = e.pageX - viewport.offsetLeft;
             scrollLeft = viewport.scrollLeft;
             lastX = e.pageX;
@@ -44,11 +47,10 @@ function init() {
         document.addEventListener('mouseup', () => {
             if (!isDragging) return;
             isDragging = false;
-            viewport.style.cursor = 'grab';
+            const viewportEl = document.getElementById('tapestryViewport');
+            if (viewportEl) viewportEl.style.cursor = 'grab';
             viewport.style.userSelect = '';
             document.body.style.userSelect = '';
-            
-            // Start momentum if velocity is significant
             if (Math.abs(velocity) > 0.5) {
                 momentum();
             }
@@ -56,36 +58,41 @@ function init() {
         
         document.addEventListener('mousemove', (e) => {
             if (!isDragging) return;
+            const viewportEl = document.getElementById('tapestryViewport');
+            if (!viewportEl) return;
             e.preventDefault();
             const now = Date.now();
-            const x = e.pageX - viewport.offsetLeft;
+            const x = e.pageX - viewportEl.offsetLeft;
             const walkX = (x - startX) * 1.2;
-            viewport.scrollLeft = scrollLeft - walkX;
-            
-            // Calculate velocity
+            viewportEl.scrollLeft = scrollLeft - walkX;
             const deltaX = e.pageX - lastX;
             const deltaTime = now - lastTime;
             if (deltaTime > 0) {
-                velocity = deltaX / deltaTime * 16; // scale for 60fps
+                velocity = deltaX / deltaTime * 16;
             }
             lastX = e.pageX;
             lastTime = now;
             updateMinimap();
         });
         
-        // Smooth mouse wheel zoom
         viewport.addEventListener('wheel', (e) => {
             e.preventDefault();
             const delta = e.deltaY > 0 ? -zoomStep : zoomStep;
+            const oldZoom = currentZoom;
             currentZoom = Math.max(minZoom, Math.min(maxZoom, currentZoom + delta));
             applyZoom();
-            updateMinimap();
+            // Adjust scroll position to keep center
+            const ratio = viewport.scrollLeft / (viewport.scrollWidth - viewport.clientWidth);
+            setTimeout(() => {
+                const newMax = viewport.scrollWidth - viewport.clientWidth;
+                viewport.scrollLeft = ratio * newMax;
+                updateMinimap();
+            }, 0);
         }, { passive: false });
         
         viewport.addEventListener('scroll', updateMinimap);
     }
     
-    // Buttons
     document.getElementById('btnPlayPause')?.addEventListener('click', toggleAutoScroll);
     document.getElementById('btnZoomIn')?.addEventListener('click', () => {
         currentZoom = Math.min(maxZoom, currentZoom + zoomStep * 2);
@@ -100,7 +107,6 @@ function init() {
     document.getElementById('btnReset')?.addEventListener('click', resetView);
     document.getElementById('btnFit')?.addEventListener('click', fitToView);
     
-    // Minimap click
     if (minimap) {
         minimap.addEventListener('click', (e) => {
             const rect = minimap.getBoundingClientRect();
@@ -113,12 +119,10 @@ function init() {
         });
     }
     
-    // Keyboard
     document.addEventListener('keydown', (e) => {
         const viewportEl = document.getElementById('tapestryViewport');
         if (!viewportEl) return;
         const scrollAmount = viewportEl.clientWidth * 0.8;
-        
         if (e.key === 'ArrowRight' || e.key === ' ') {
             e.preventDefault();
             viewportEl.scrollBy({ left: scrollAmount, behavior: 'smooth' });
@@ -157,9 +161,7 @@ function init() {
 function momentum() {
     const viewport = document.getElementById('tapestryViewport');
     if (!viewport) return;
-    
     velocity *= friction;
-    
     if (Math.abs(velocity) > 0.1) {
         viewport.scrollLeft -= velocity;
         updateMinimap();
@@ -189,14 +191,12 @@ function updateMinimap() {
     const viewport = document.getElementById('tapestryViewport');
     const minimapViewport = document.getElementById('minimapViewport');
     if (!viewport || !minimapViewport) return;
-    
     const totalScroll = viewport.scrollWidth - viewport.clientWidth;
     if (totalScroll <= 0) {
         minimapViewport.style.left = '0';
         minimapViewport.style.width = '100%';
         return;
     }
-    
     const ratio = viewport.scrollLeft / totalScroll;
     const viewRatio = viewport.clientWidth / viewport.scrollWidth;
     minimapViewport.style.left = ratio * (220 * (1 - viewRatio)) + 'px';
@@ -250,7 +250,8 @@ function fitToView() {
     const strip = document.getElementById('tapestryStrip');
     if (!viewport || !strip) return;
     const viewportWidth = viewport.clientWidth - 120;
-    const stripWidth = strip.scrollWidth / currentZoom;
+    // Calculate based on strip's actual width
+    const stripWidth = strip.scrollWidth;
     if (stripWidth > 0) {
         currentZoom = Math.max(minZoom, Math.min(maxZoom, viewportWidth / stripWidth));
         applyZoom();
@@ -261,8 +262,8 @@ function fitToView() {
 function applyZoom() {
     const strip = document.getElementById('tapestryStrip');
     if (strip) {
-        strip.style.transform = `scale(${currentZoom})`;
-        strip.style.transformOrigin = 'left center';
+        strip.style.zoom = currentZoom; strip.style.transform = "";
+        
         strip.style.transition = 'transform 0.15s ease-out';
     }
 }
@@ -271,43 +272,4 @@ if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
 } else {
     init();
-}
-
-// Background music toggle
-function initMusic() {
-    const btnMusic = document.getElementById('btnMusic');
-    const bgMusic = document.getElementById('bgMusic');
-    if (!btnMusic || !bgMusic) return;
-    
-    bgMusic.volume = 0.3;
-    let isPlaying = false;
-    
-    btnMusic.addEventListener('click', () => {
-        if (isPlaying) {
-            bgMusic.pause();
-            isPlaying = false;
-            btnMusic.textContent = '🔇 Musik';
-            btnMusic.title = 'Hintergrundmusik einschalten';
-        } else {
-            bgMusic.play().catch(() => {
-                // Autoplay might be blocked, but user interaction should allow it
-            });
-            isPlaying = true;
-            btnMusic.textContent = '🔊 Musik';
-            btnMusic.title = 'Hintergrundmusik ausschalten';
-        }
-    });
-}
-
-// Call initMusic after other inits
-const originalInit = init;
-if (typeof init === 'function') {
-    // We need to extend - but easier to just add after
-}
-
-// Initialize music
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initMusic);
-} else {
-    initMusic();
 }
